@@ -8,6 +8,8 @@ import SettingsPage from './pages/SettingsPage.jsx';
 import CoursesPage from './pages/CoursesPage.jsx';
 import CoursePage from './pages/CoursePage.jsx';
 import LessonPage from './pages/LessonPage.jsx';
+import GrammarPage from './pages/GrammarPage.jsx';
+import LessonLayout from './components/LessonLayout.jsx';
 
 function App() {
   return (
@@ -20,7 +22,10 @@ function App() {
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/courses" element={<CoursesPage />} />
         <Route path="/courses/:courseId" element={<CoursePage />} />
-        <Route path="/lessons/:lessonId" element={<LessonPage />} />
+        <Route path="/lessons/:lessonId" element={<LessonLayout />}>
+          <Route index element={<LessonPage />} />
+          <Route path="grammar" element={<GrammarPage />} />
+        </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

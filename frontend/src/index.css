@@ -4,8 +4,16 @@
 
 :root {
   --color-primary: #E11D48;
+  --color-surface: #ffffff;
+  --color-main: #111827;
+  --color-muted: #6b7280;
+  --color-line: #e5e7eb;
 }
 
 @theme inline {
   --color-primary: var(--color-primary);
+  --color-surface: var(--color-surface);
+  --color-main: var(--color-main);
+  --color-muted: var(--color-muted);
+  --color-line: var(--color-line);
 }
