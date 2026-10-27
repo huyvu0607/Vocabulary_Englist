@@ -1,49 +1,50 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase.js';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthProvider.jsx';
+import { useProfile } from '../hooks/useProfile.js';
+import { useCourses } from '../hooks/useCourses.js';
 
 function HomePage() {
-  const [status, setStatus] = useState('Đang kiểm tra kết nối…');
+  const { data: profile, isLoading: profileLoading } = useProfile();
+  const { data: courses } = useCourses();
 
-  useEffect(() => {
-    let active = true;
+  if (profileLoading) {
+    return <div className="px-4 py-8 text-sm text-gray-500">Đang tải…</div>;
+  }
 
-    async function checkConnection() {
-      if (!supabase) {
-        if (active) {
-          setStatus(
-            'Lỗi: chưa cấu hình .env. Hãy điền VITE_SUPABASE_URL và VITE_SUPABASE_ANON_KEY rồi khởi động lại.',
-          );
-        }
-        return;
-      }
-
-      try {
-        const { error } = await supabase.auth.getSession();
-        if (active) {
-          setStatus(
-            error
-              ? `Lỗi kết nối Supabase: ${error.message}`
-              : 'Kết nối Supabase thành công',
-          );
-        }
-      } catch (err) {
-        if (active) {
-          setStatus(`Lỗi kết nối Supabase: ${err.message}`);
-        }
-      }
-    }
-
-    checkConnection();
-
-    return () => {
-      active = false;
-    };
-  }, []);
+  const targetCourse = courses?.find(c => c.id === profile?.target_course_id);
 
   return (
-    <main className="min-h-screen px-4 py-6">
-      <h1 className="text-xl font-semibold text-primary">Ôn từ vựng tiếng Anh</h1>
-      <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">{status}</p>
+    <main className="px-4 py-8">
+      <div className="mx-auto max-w-xl text-center">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Xin chào, {profile?.display_name || 'bạn'}! 👋
+        </h1>
+        
+        <div className="mt-10 flex flex-col items-center gap-6">
+          {targetCourse ? (
+            <Link
+              to={`/courses/${targetCourse.id}`}
+              className="w-full max-w-xs rounded-2xl bg-primary py-4 text-center text-lg font-bold text-white shadow-lg transition-transform active:scale-95"
+            >
+              Tiếp tục học
+            </Link>
+          ) : (
+            <Link
+              to="/onboarding"
+              className="w-full max-w-xs rounded-2xl bg-primary py-4 text-center text-lg font-bold text-white shadow-lg transition-transform active:scale-95"
+            >
+              Thiết lập mục tiêu
+            </Link>
+          )}
+          
+          <Link 
+            to="/courses" 
+            className="text-sm font-medium text-gray-500 hover:text-primary"
+          >
+            Xem tất cả khóa học
+          </Link>
+        </div>
+      </div>
     </main>
   );
 }
