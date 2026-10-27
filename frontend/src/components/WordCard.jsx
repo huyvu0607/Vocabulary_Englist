@@ -1,10 +1,33 @@
-import { useMutation } from '@tanstack/react-query';
-import { useToggleLearned } from '../hooks/useToggleLearned.js';
+import { useState } from 'react';
+import { useSpeech } from '../hooks/useSpeech.js';
 
 function WordCard({ wordItem, onToggle }) {
   const word = wordItem.words;
   const isLearned = word.user_vocabularies?.[0]?.is_learned ?? false;
-  const { isPending: isSaving } = useToggleLearned(); // This is just for local state if needed, but we use mutation from parent
+  const { supported, speak, speakingText } = useSpeech();
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [readingExample, setReadingExample] = useState(false);
+
+  const toggleLearn = () => {
+    onToggle(word.id, !isLearned);
+  };
+
+  const readWord = () => {
+    if (!supported) return;
+    setIsSpeaking(true);
+    speak(word.word).finally(() => setIsSpeaking(false));
+  };
+
+  const readExample = () => {
+    if (!supported) return;
+    setReadingExample(true);
+    const example = word.example_en || word.example_vi || '';
+    if (example) {
+      speak(example).finally(() => setReadingExample(false));
+    } else {
+      setReadingExample(false);
+    }
+  };
 
   return (
     <div className={`flex flex-col gap-3 p-4 rounded-lg border transition-all ${
@@ -15,21 +38,38 @@ function WordCard({ wordItem, onToggle }) {
           <div className="flex items-center gap-2">
             <span className="text-lg font-bold text-gray-900 dark:text-white">{word.word}</span>
             {word.part_of_speech && (
-              <span className="text-xs italic text-gray-500">{word.part_of_speech}</span>
+              <span className="text-xs italic text-gray-500 dark:text-gray-400">
+                {word.part_of_speech}
+              </span>
             )}
           </div>
-          {word.phonetic && <span className="text-sm text-gray-400">{word.phonetic}</span>}
+          {word.phonetic && (
+            <span className="text-sm text-gray-400 dark:text-gray-300">
+              {word.phonetic}
+            </span>
+          )}
         </div>
-        <button
-          onClick={() => onToggle(word.id, !isLearned)}
-          className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-            isLearned 
-              ? 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900 dark:text-green-300' 
-              : 'bg-gray-100 text-gray-600 hover:bg-primary hover:text-white dark:bg-gray-700 dark:text-gray-300'
-          }`}
-        >
-          {isLearned ? '✓ Đã thuộc' : 'Chưa thuộc'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={readWord}
+            className={`rounded-full p-2 transition-colors ${
+              isSpeaking ? 'bg-primary text-white' : 'hover:bg-primary/10 text-primary'
+            }`}
+            aria-label={speakingText ? 'Ngừng đọc' : `Nghe phát âm từ ${word.word}`}
+            disabled={!supported}
+          >
+            {isSpeaking ? '⏸' : '🔊'}
+          </button>
+          <button
+            onClick={readExample}
+            className={`rounded-full p-1.5 transition-colors hover:bg-primary/10 text-primary`
+            }
+            aria-label="Nghe phát âm câu ví dụ"
+            disabled={!supported}
+          >
+            {readingExample ? '⏸' : '🔊'}
+          </button>
+        </div>
       </div>
 
       <div className="space-y-2">
@@ -39,12 +79,12 @@ function WordCard({ wordItem, onToggle }) {
           </p>
         )}
         {(word.example_en || word.example_vi) && (
-          <div className="rounded-md bg-gray-50 p-2 text-sm dark:bg-gray-800">
+          <div className="rounded-md p-2 text-xs text-gray-600 dark:text-gray-300">
             {word.example_en && (
-              <p className="text-gray-600 dark:text-gray-300">{word.example_en}</p>
+              <p>{word.example_en}</p>
             )}
             {word.example_vi && (
-              <p className="text-xs italic text-gray-400">{word.example_vi}</p>
+              <p className="mt-1 text-xs italic text-gray-400">{word.example_vi}</p>
             )}
           </div>
         )}

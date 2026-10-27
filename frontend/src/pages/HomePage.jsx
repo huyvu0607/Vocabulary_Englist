@@ -2,16 +2,23 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthProvider.jsx';
 import { useProfile } from '../hooks/useProfile.js';
 import { useCourses } from '../hooks/useCourses.js';
+import { useCourseProgress } from '../hooks/useCourseProgress.js';
+import ProgressBar from '../components/ProgressBar.jsx';
 
 function HomePage() {
   const { data: profile, isLoading: profileLoading } = useProfile();
   const { data: courses } = useCourses();
+  const targetCourse = courses?.find(c => c.id === profile?.target_course_id);
+  const courseProgress = useCourseProgress(targetCourse?.id ?? '');
 
   if (profileLoading) {
     return <div className="px-4 py-8 text-sm text-gray-500">Đang tải…</div>;
   }
 
-  const targetCourse = courses?.find(c => c.id === profile?.target_course_id);
+  // Lấy progress Course mục tiêu
+  const cp = courseProgress?.data?.find(p => p.level === 'course') ?? {};
+  const cpTotal = cp.total_words ?? 0;
+  const cpLearned = cp.learned_words ?? 0;
 
   return (
     <main className="px-4 py-8">
@@ -20,14 +27,17 @@ function HomePage() {
           Xin chào, {profile?.display_name || 'bạn'}! 👋
         </h1>
         
-        <div className="mt-10 flex flex-col items-center gap-6">
+        <div className="mt-6">
           {targetCourse ? (
-            <Link
-              to={`/courses/${targetCourse.id}`}
-              className="w-full max-w-xs rounded-2xl bg-primary py-4 text-center text-lg font-bold text-white shadow-lg transition-transform active:scale-95"
-            >
-              Tiếp tục học
-            </Link>
+            <div className="flex flex-col items-center gap-3">
+              <ProgressBar learned={cpLearned} total={cpTotal} />
+              <Link
+                to={`/courses/${targetCourse.id}`}
+                className="w-full max-w-xs rounded-2xl bg-primary py-4 text-center text-lg font-bold text-white shadow-lg transition-transform active:scale-95"
+              >
+                Tiếp tục học
+              </Link>
+            </div>
           ) : (
             <Link
               to="/onboarding"
@@ -36,14 +46,14 @@ function HomePage() {
               Thiết lập mục tiêu
             </Link>
           )}
-          
-          <Link 
-            to="/courses" 
-            className="text-sm font-medium text-gray-500 hover:text-primary"
-          >
-            Xem tất cả khóa học
-          </Link>
         </div>
+        
+        <Link 
+          to="/courses" 
+          className="mt-4 text-sm font-medium text-gray-500 hover:text-primary"
+        >
+          Xem tất cả khóa học
+        </Link>
       </div>
     </main>
   );

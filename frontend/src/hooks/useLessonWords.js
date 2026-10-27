@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase.js';
+import { useAuth } from '../contexts/AuthProvider.jsx';
 
 export function useLessonWords(lessonId) {
   return useQuery({
@@ -9,11 +10,9 @@ export function useLessonWords(lessonId) {
         .from('lesson_words')
         .select(`
           position, 
-          words(
-            id, word, part_of_speech, phonetic, meaning_vi, 
+          words(id, word, part_of_speech, phonetic, meaning_vi, 
             example_en, example_vi, 
-            user_vocabularies(is_learned)
-          )
+            user_vocabularies(is_learned))
         `)
         .eq('lesson_id', lessonId)
         .order('position');
